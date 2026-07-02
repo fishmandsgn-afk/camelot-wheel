@@ -1,6 +1,3 @@
-
-
-Index · HTML
 <!DOCTYPE html>
 <html lang="uk">
 <head>
@@ -157,22 +154,22 @@ Index · HTML
 </style>
 </head>
 <body>
- 
+
 <h1>Колесо Камелота</h1>
 <p class="sub">Натисни на свою тональність — підсвітяться ті, з якими вона добре зводиться (гармонічний мікс).</p>
- 
+
 <div id="wrap">
   <svg viewBox="0 0 500 500" width="500" height="500"></svg>
 </div>
- 
+
 <div id="legend">
   <span><span class="dot" style="background:var(--accent)"></span>обрана тональність</span>
   <span><span class="dot" style="background:var(--accent2)"></span>сумісні для зведення</span>
 </div>
- 
+
 <div id="info">Обери тональність на колесі, щоб побачити варіанти зведення.</div>
 <button id="reset">Скинути вибір</button>
- 
+
 <script>
 // Стандартне колесо Камелота: номер + B (мажор, зовнішнє кільце) / A (мінор, внутрішнє кільце)
 const KEYS = [
@@ -189,17 +186,17 @@ const KEYS = [
   {num:11, major:"A",  minor:"F#"},
   {num:12, major:"E",  minor:"C#"},
 ];
- 
+
 const svgNS = "http://www.w3.org/2000/svg";
 const svg = document.querySelector("svg");
 const cx = 250, cy = 250;
 const rOuterOut = 235, rOuterIn = 150, rInnerOut = 148, rInnerIn = 65;
- 
+
 function polar(r, angleDeg){
   const a = (angleDeg - 90) * Math.PI/180;
   return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
 }
- 
+
 function arcPath(rOut, rIn, startAngle, endAngle){
   const [x1,y1] = polar(rOut, startAngle);
   const [x2,y2] = polar(rOut, endAngle);
@@ -208,24 +205,24 @@ function arcPath(rOut, rIn, startAngle, endAngle){
   const large = (endAngle-startAngle) > 180 ? 1 : 0;
   return `M ${x1} ${y1} A ${rOut} ${rOut} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 ${large} 0 ${x4} ${y4} Z`;
 }
- 
+
 const segAngle = 360/12;
 let selected = null; // {num, letter}
- 
+
 function keyId(num, letter){ return num+letter; }
- 
+
 function drawWheel(){
   svg.innerHTML = "";
   KEYS.forEach((k, i)=>{
     const start = i*segAngle - segAngle/2;
     const end = start + segAngle;
     const mid = (start+end)/2;
- 
+
     // outer = major (B) — path + its labels live in one group so they dim/highlight together
     const outerG = document.createElementNS(svgNS,"g");
     outerG.setAttribute("class","seg-group");
     outerG.id = "seg-"+keyId(k.num,"B");
- 
+
     const outerPath = document.createElementNS(svgNS,"path");
     outerPath.setAttribute("d", arcPath(rOuterOut, rOuterIn, start, end));
     outerPath.setAttribute("class","seg outer");
@@ -233,7 +230,7 @@ function drawWheel(){
     outerPath.dataset.letter = "B";
     outerPath.addEventListener("click", ()=>selectKey(k.num,"B"));
     outerG.appendChild(outerPath);
- 
+
     const outerLabel = document.createElementNS(svgNS,"text");
     const [lx,ly] = polar((rOuterOut+rOuterIn)/2 + 10, mid);
     outerLabel.setAttribute("x", lx);
@@ -241,7 +238,7 @@ function drawWheel(){
     outerLabel.setAttribute("class","label");
     outerLabel.textContent = k.num+"B";
     outerG.appendChild(outerLabel);
- 
+
     const outerNote = document.createElementNS(svgNS,"text");
     const [nx,ny] = polar((rOuterOut+rOuterIn)/2 - 14, mid);
     outerNote.setAttribute("x", nx);
@@ -249,14 +246,14 @@ function drawWheel(){
     outerNote.setAttribute("class","label note");
     outerNote.textContent = k.major;
     outerG.appendChild(outerNote);
- 
+
     svg.appendChild(outerG);
- 
+
     // inner = minor (A)
     const innerG = document.createElementNS(svgNS,"g");
     innerG.setAttribute("class","seg-group");
     innerG.id = "seg-"+keyId(k.num,"A");
- 
+
     const innerPath = document.createElementNS(svgNS,"path");
     innerPath.setAttribute("d", arcPath(rInnerOut, rInnerIn, start, end));
     innerPath.setAttribute("class","seg inner");
@@ -264,7 +261,7 @@ function drawWheel(){
     innerPath.dataset.letter = "A";
     innerPath.addEventListener("click", ()=>selectKey(k.num,"A"));
     innerG.appendChild(innerPath);
- 
+
     const innerLabel = document.createElementNS(svgNS,"text");
     const [ilx,ily] = polar((rInnerOut+rInnerIn)/2 + 8, mid);
     innerLabel.setAttribute("x", ilx);
@@ -272,7 +269,7 @@ function drawWheel(){
     innerLabel.setAttribute("class","label");
     innerLabel.textContent = k.num+"A";
     innerG.appendChild(innerLabel);
- 
+
     const innerNote = document.createElementNS(svgNS,"text");
     const [inx,iny] = polar((rInnerOut+rInnerIn)/2 - 12, mid);
     innerNote.setAttribute("x", inx);
@@ -280,11 +277,11 @@ function drawWheel(){
     innerNote.setAttribute("class","label note");
     innerNote.textContent = k.minor+"m";
     innerG.appendChild(innerNote);
- 
+
     svg.appendChild(innerG);
   });
 }
- 
+
 function getCompatible(num, letter){
   const prev = num===1 ? 12 : num-1;
   const next = num===12 ? 1 : num+1;
@@ -295,12 +292,12 @@ function getCompatible(num, letter){
     {num:num, letter:otherLetter, label:"паралельна тональність"},
   ];
 }
- 
+
 function keyName(num, letter){
   const k = KEYS.find(x=>x.num===num);
   return letter==="B" ? `${k.major} major` : `${k.minor} minor`;
 }
- 
+
 function selectKey(num, letter){
   if(selected && selected.num===num && selected.letter===letter){
     selected = null;
@@ -309,25 +306,25 @@ function selectKey(num, letter){
   }
   render();
 }
- 
+
 function render(){
   document.querySelectorAll(".seg-group").forEach(el=>{
     el.classList.remove("selected","compatible","dim");
   });
- 
+
   const info = document.getElementById("info");
- 
+
   if(!selected){
     info.innerHTML = "Обери тональність на колесі, щоб побачити варіанти зведення.";
     return;
   }
- 
+
   document.querySelectorAll(".seg-group").forEach(el=>el.classList.add("dim"));
- 
+
   const selEl = document.getElementById("seg-"+keyId(selected.num, selected.letter));
   selEl.classList.remove("dim");
   selEl.classList.add("selected");
- 
+
   const compat = getCompatible(selected.num, selected.letter);
   let itemsHtml = "";
   compat.forEach(c=>{
@@ -336,22 +333,21 @@ function render(){
     el.classList.add("compatible");
     itemsHtml += `<span class="compat-item">${c.num}${c.letter} — ${keyName(c.num,c.letter)}</span>`;
   });
- 
+
   info.innerHTML = `
     <div class="title">${selected.num}${selected.letter} — ${keyName(selected.num, selected.letter)}</div>
     Добре зводиться з:<br>
     ${itemsHtml}
   `;
 }
- 
+
 document.getElementById("reset").addEventListener("click", ()=>{
   selected = null;
   render();
 });
- 
+
 drawWheel();
 render();
 </script>
 </body>
 </html>
- 
