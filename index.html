@@ -60,18 +60,21 @@
     user-select:none;
     -webkit-user-select:none;
   }
+  .seg-group{
+    transition:opacity .12s ease;
+  }
   .seg{
     cursor:pointer;
     stroke:var(--stroke);
     stroke-width:2.5;
-    transition:fill .12s ease, opacity .12s ease, filter .12s ease;
+    transition:fill .12s ease, filter .12s ease;
   }
   .seg.outer{fill:var(--outer-fill);}
   .seg.inner{fill:var(--inner-fill);}
   .seg:active{filter:brightness(1.3);}
-  .seg.selected{fill:var(--accent)!important;}
-  .seg.compatible{fill:var(--accent2)!important;}
-  .seg.dim{opacity:.35;}
+  .seg-group.selected .seg{fill:var(--accent)!important;}
+  .seg-group.compatible .seg{fill:var(--accent2)!important;}
+  .seg-group.dim{opacity:.3;}
   .label{
     font-size:14px;
     font-weight:700;
@@ -79,6 +82,7 @@
     pointer-events:none;
     text-anchor:middle;
     dominant-baseline:middle;
+    transition:fill .12s ease;
   }
   .label.note{
     font-size:10px;
@@ -87,8 +91,14 @@
     pointer-events:none;
     text-anchor:middle;
     dominant-baseline:middle;
+    transition:fill .12s ease;
   }
-  .seg.selected ~ .label, .seg.compatible ~ .label {fill:#101116;}
+  .seg-group.dim .label{fill:var(--muted);}
+  .seg-group.dim .label.note{fill:#54576a;}
+  .seg-group.selected .label,
+  .seg-group.compatible .label,
+  .seg-group.selected .label.note,
+  .seg-group.compatible .label.note{fill:#101116;}
   #legend{
     margin-top:16px;
     display:flex;
@@ -208,15 +218,18 @@ function drawWheel(){
     const end = start + segAngle;
     const mid = (start+end)/2;
 
-    // outer = major (B)
+    // outer = major (B) — path + its labels live in one group so they dim/highlight together
+    const outerG = document.createElementNS(svgNS,"g");
+    outerG.setAttribute("class","seg-group");
+    outerG.id = "seg-"+keyId(k.num,"B");
+
     const outerPath = document.createElementNS(svgNS,"path");
     outerPath.setAttribute("d", arcPath(rOuterOut, rOuterIn, start, end));
     outerPath.setAttribute("class","seg outer");
     outerPath.dataset.num = k.num;
     outerPath.dataset.letter = "B";
-    outerPath.id = "seg-"+keyId(k.num,"B");
     outerPath.addEventListener("click", ()=>selectKey(k.num,"B"));
-    svg.appendChild(outerPath);
+    outerG.appendChild(outerPath);
 
     const outerLabel = document.createElementNS(svgNS,"text");
     const [lx,ly] = polar((rOuterOut+rOuterIn)/2 + 10, mid);
@@ -224,7 +237,7 @@ function drawWheel(){
     outerLabel.setAttribute("y", ly);
     outerLabel.setAttribute("class","label");
     outerLabel.textContent = k.num+"B";
-    svg.appendChild(outerLabel);
+    outerG.appendChild(outerLabel);
 
     const outerNote = document.createElementNS(svgNS,"text");
     const [nx,ny] = polar((rOuterOut+rOuterIn)/2 - 14, mid);
@@ -232,17 +245,22 @@ function drawWheel(){
     outerNote.setAttribute("y", ny);
     outerNote.setAttribute("class","label note");
     outerNote.textContent = k.major;
-    svg.appendChild(outerNote);
+    outerG.appendChild(outerNote);
+
+    svg.appendChild(outerG);
 
     // inner = minor (A)
+    const innerG = document.createElementNS(svgNS,"g");
+    innerG.setAttribute("class","seg-group");
+    innerG.id = "seg-"+keyId(k.num,"A");
+
     const innerPath = document.createElementNS(svgNS,"path");
     innerPath.setAttribute("d", arcPath(rInnerOut, rInnerIn, start, end));
     innerPath.setAttribute("class","seg inner");
     innerPath.dataset.num = k.num;
     innerPath.dataset.letter = "A";
-    innerPath.id = "seg-"+keyId(k.num,"A");
     innerPath.addEventListener("click", ()=>selectKey(k.num,"A"));
-    svg.appendChild(innerPath);
+    innerG.appendChild(innerPath);
 
     const innerLabel = document.createElementNS(svgNS,"text");
     const [ilx,ily] = polar((rInnerOut+rInnerIn)/2 + 8, mid);
@@ -250,7 +268,7 @@ function drawWheel(){
     innerLabel.setAttribute("y", ily);
     innerLabel.setAttribute("class","label");
     innerLabel.textContent = k.num+"A";
-    svg.appendChild(innerLabel);
+    innerG.appendChild(innerLabel);
 
     const innerNote = document.createElementNS(svgNS,"text");
     const [inx,iny] = polar((rInnerOut+rInnerIn)/2 - 12, mid);
@@ -258,7 +276,9 @@ function drawWheel(){
     innerNote.setAttribute("y", iny);
     innerNote.setAttribute("class","label note");
     innerNote.textContent = k.minor+"m";
-    svg.appendChild(innerNote);
+    innerG.appendChild(innerNote);
+
+    svg.appendChild(innerG);
   });
 }
 
@@ -288,7 +308,7 @@ function selectKey(num, letter){
 }
 
 function render(){
-  document.querySelectorAll(".seg").forEach(el=>{
+  document.querySelectorAll(".seg-group").forEach(el=>{
     el.classList.remove("selected","compatible","dim");
   });
 
@@ -299,7 +319,7 @@ function render(){
     return;
   }
 
-  document.querySelectorAll(".seg").forEach(el=>el.classList.add("dim"));
+  document.querySelectorAll(".seg-group").forEach(el=>el.classList.add("dim"));
 
   const selEl = document.getElementById("seg-"+keyId(selected.num, selected.letter));
   selEl.classList.remove("dim");
