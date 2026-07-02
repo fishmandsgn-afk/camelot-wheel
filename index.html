@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<title>Колесо Камелота</title>
+<style>
+  :root{
+    --bg:#14151a;
+    --panel:#1d1f27;
+    --text:#eceef2;
+    --muted:#8a8d99;
+    --accent:#f2545b;
+    --accent2:#4fd1c5;
+    --outer-fill:#2a2d3a;
+    --inner-fill:#232633;
+    --stroke:#0e0f13;
+  }
+  *{box-sizing:border-box;}
+  html, body{
+    -webkit-tap-highlight-color: transparent;
+    touch-action: manipulation;
+  }
+  body{
+    margin:0;
+    min-height:100svh;
+    background:radial-gradient(circle at 50% 15%, #22242e, var(--bg) 60%);
+    color:var(--text);
+    font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    padding:16px 12px calc(32px + env(safe-area-inset-bottom));
+  }
+  h1{
+    font-size:clamp(18px,5vw,22px);
+    font-weight:600;
+    margin:4px 0 4px;
+    letter-spacing:.2px;
+    text-align:center;
+  }
+  p.sub{
+    color:var(--muted);
+    font-size:13px;
+    margin:0 0 16px;
+    text-align:center;
+    max-width:340px;
+  }
+  #wrap{
+    position:relative;
+    width:min(94vw,400px);
+    aspect-ratio:1/1;
+    touch-action: manipulation;
+  }
+  svg{
+    width:100%;
+    height:100%;
+    aspect-ratio:1/1;
+    display:block;
+    user-select:none;
+    -webkit-user-select:none;
+  }
+  .seg{
+    cursor:pointer;
+    stroke:var(--stroke);
+    stroke-width:2.5;
+    transition:fill .12s ease, opacity .12s ease, filter .12s ease;
+  }
+  .seg.outer{fill:var(--outer-fill);}
+  .seg.inner{fill:var(--inner-fill);}
+  .seg:active{filter:brightness(1.3);}
+  .seg.selected{fill:var(--accent)!important;}
+  .seg.compatible{fill:var(--accent2)!important;}
+  .seg.dim{opacity:.35;}
+  .label{
+    font-size:14px;
+    font-weight:700;
+    fill:var(--text);
+    pointer-events:none;
+    text-anchor:middle;
+    dominant-baseline:middle;
+  }
+  .label.note{
+    font-size:10px;
+    font-weight:500;
+    fill:var(--muted);
+    pointer-events:none;
+    text-anchor:middle;
+    dominant-baseline:middle;
+  }
+  .seg.selected ~ .label, .seg.compatible ~ .label {fill:#101116;}
+  #legend{
+    margin-top:16px;
+    display:flex;
+    gap:14px;
+    flex-wrap:wrap;
+    justify-content:center;
+    font-size:12px;
+    color:var(--muted);
+  }
+  .dot{
+    display:inline-block;
+    width:10px;height:10px;
+    border-radius:50%;
+    margin-right:6px;
+    vertical-align:middle;
+  }
+  #info{
+    margin-top:16px;
+    width:min(94vw,400px);
+    background:var(--panel);
+    border-radius:14px;
+    padding:14px 16px;
+    min-height:56px;
+    font-size:14px;
+    line-height:1.5;
+  }
+  #info .title{
+    font-weight:700;
+    font-size:16px;
+    margin-bottom:6px;
+  }
+  #info .compat-item{
+    display:inline-block;
+    background:#2a2d3a;
+    border-radius:8px;
+    padding:5px 10px;
+    margin:3px 4px 0 0;
+    font-weight:600;
+    font-size:13px;
+  }
+  #reset{
+    margin-top:14px;
+    background:none;
+    border:1px solid #3a3d4a;
+    color:var(--muted);
+    padding:10px 18px;
+    border-radius:10px;
+    font-size:14px;
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+  }
+  #reset:active{color:var(--text); border-color:var(--muted); background:#22242e;}
+</style>
+</head>
+<body>
+
+<h1>Колесо Камелота</h1>
+<p class="sub">Натисни на свою тональність — підсвітяться ті, з якими вона добре зводиться (гармонічний мікс).</p>
+
+<div id="wrap">
+  <svg viewBox="0 0 500 500" width="500" height="500"></svg>
+</div>
+
+<div id="legend">
+  <span><span class="dot" style="background:var(--accent)"></span>обрана тональність</span>
+  <span><span class="dot" style="background:var(--accent2)"></span>сумісні для зведення</span>
+</div>
+
+<div id="info">Обери тональність на колесі, щоб побачити варіанти зведення.</div>
+<button id="reset">Скинути вибір</button>
+
+<script>
+// Стандартне колесо Камелота: номер + B (мажор, зовнішнє кільце) / A (мінор, внутрішнє кільце)
+const KEYS = [
+  {num:1,  major:"B",  minor:"Ab"},
+  {num:2,  major:"F#", minor:"Eb"},
+  {num:3,  major:"Db", minor:"Bb"},
+  {num:4,  major:"Ab", minor:"F"},
+  {num:5,  major:"Eb", minor:"C"},
+  {num:6,  major:"Bb", minor:"G"},
+  {num:7,  major:"F",  minor:"D"},
+  {num:8,  major:"C",  minor:"A"},
+  {num:9,  major:"G",  minor:"E"},
+  {num:10, major:"D",  minor:"B"},
+  {num:11, major:"A",  minor:"F#"},
+  {num:12, major:"E",  minor:"C#"},
+];
+
+const svgNS = "http://www.w3.org/2000/svg";
+const svg = document.querySelector("svg");
+const cx = 250, cy = 250;
+const rOuterOut = 235, rOuterIn = 150, rInnerOut = 148, rInnerIn = 65;
+
+function polar(r, angleDeg){
+  const a = (angleDeg - 90) * Math.PI/180;
+  return [cx + r*Math.cos(a), cy + r*Math.sin(a)];
+}
+
+function arcPath(rOut, rIn, startAngle, endAngle){
+  const [x1,y1] = polar(rOut, startAngle);
+  const [x2,y2] = polar(rOut, endAngle);
+  const [x3,y3] = polar(rIn, endAngle);
+  const [x4,y4] = polar(rIn, startAngle);
+  const large = (endAngle-startAngle) > 180 ? 1 : 0;
+  return `M ${x1} ${y1} A ${rOut} ${rOut} 0 ${large} 1 ${x2} ${y2} L ${x3} ${y3} A ${rIn} ${rIn} 0 ${large} 0 ${x4} ${y4} Z`;
+}
+
+const segAngle = 360/12;
+let selected = null; // {num, letter}
+
+function keyId(num, letter){ return num+letter; }
+
+function drawWheel(){
+  svg.innerHTML = "";
+  KEYS.forEach((k, i)=>{
+    const start = i*segAngle - segAngle/2;
+    const end = start + segAngle;
+    const mid = (start+end)/2;
+
+    // outer = major (B)
+    const outerPath = document.createElementNS(svgNS,"path");
+    outerPath.setAttribute("d", arcPath(rOuterOut, rOuterIn, start, end));
+    outerPath.setAttribute("class","seg outer");
+    outerPath.dataset.num = k.num;
+    outerPath.dataset.letter = "B";
+    outerPath.id = "seg-"+keyId(k.num,"B");
+    outerPath.addEventListener("click", ()=>selectKey(k.num,"B"));
+    svg.appendChild(outerPath);
+
+    const outerLabel = document.createElementNS(svgNS,"text");
+    const [lx,ly] = polar((rOuterOut+rOuterIn)/2 + 10, mid);
+    outerLabel.setAttribute("x", lx);
+    outerLabel.setAttribute("y", ly);
+    outerLabel.setAttribute("class","label");
+    outerLabel.textContent = k.num+"B";
+    svg.appendChild(outerLabel);
+
+    const outerNote = document.createElementNS(svgNS,"text");
+    const [nx,ny] = polar((rOuterOut+rOuterIn)/2 - 14, mid);
+    outerNote.setAttribute("x", nx);
+    outerNote.setAttribute("y", ny);
+    outerNote.setAttribute("class","label note");
+    outerNote.textContent = k.major;
+    svg.appendChild(outerNote);
+
+    // inner = minor (A)
+    const innerPath = document.createElementNS(svgNS,"path");
+    innerPath.setAttribute("d", arcPath(rInnerOut, rInnerIn, start, end));
+    innerPath.setAttribute("class","seg inner");
+    innerPath.dataset.num = k.num;
+    innerPath.dataset.letter = "A";
+    innerPath.id = "seg-"+keyId(k.num,"A");
+    innerPath.addEventListener("click", ()=>selectKey(k.num,"A"));
+    svg.appendChild(innerPath);
+
+    const innerLabel = document.createElementNS(svgNS,"text");
+    const [ilx,ily] = polar((rInnerOut+rInnerIn)/2 + 8, mid);
+    innerLabel.setAttribute("x", ilx);
+    innerLabel.setAttribute("y", ily);
+    innerLabel.setAttribute("class","label");
+    innerLabel.textContent = k.num+"A";
+    svg.appendChild(innerLabel);
+
+    const innerNote = document.createElementNS(svgNS,"text");
+    const [inx,iny] = polar((rInnerOut+rInnerIn)/2 - 12, mid);
+    innerNote.setAttribute("x", inx);
+    innerNote.setAttribute("y", iny);
+    innerNote.setAttribute("class","label note");
+    innerNote.textContent = k.minor+"m";
+    svg.appendChild(innerNote);
+  });
+}
+
+function getCompatible(num, letter){
+  const prev = num===1 ? 12 : num-1;
+  const next = num===12 ? 1 : num+1;
+  const otherLetter = letter==="A" ? "B" : "A";
+  return [
+    {num:prev, letter, label:"−1 (той самий лад)"},
+    {num:next, letter, label:"+1 (той самий лад)"},
+    {num:num, letter:otherLetter, label:"паралельна тональність"},
+  ];
+}
+
+function keyName(num, letter){
+  const k = KEYS.find(x=>x.num===num);
+  return letter==="B" ? `${k.major} major` : `${k.minor} minor`;
+}
+
+function selectKey(num, letter){
+  if(selected && selected.num===num && selected.letter===letter){
+    selected = null;
+  } else {
+    selected = {num, letter};
+  }
+  render();
+}
+
+function render(){
+  document.querySelectorAll(".seg").forEach(el=>{
+    el.classList.remove("selected","compatible","dim");
+  });
+
+  const info = document.getElementById("info");
+
+  if(!selected){
+    info.innerHTML = "Обери тональність на колесі, щоб побачити варіанти зведення.";
+    return;
+  }
+
+  document.querySelectorAll(".seg").forEach(el=>el.classList.add("dim"));
+
+  const selEl = document.getElementById("seg-"+keyId(selected.num, selected.letter));
+  selEl.classList.remove("dim");
+  selEl.classList.add("selected");
+
+  const compat = getCompatible(selected.num, selected.letter);
+  let itemsHtml = "";
+  compat.forEach(c=>{
+    const el = document.getElementById("seg-"+keyId(c.num,c.letter));
+    el.classList.remove("dim");
+    el.classList.add("compatible");
+    itemsHtml += `<span class="compat-item">${c.num}${c.letter} — ${keyName(c.num,c.letter)}</span>`;
+  });
+
+  info.innerHTML = `
+    <div class="title">${selected.num}${selected.letter} — ${keyName(selected.num, selected.letter)}</div>
+    Добре зводиться з:<br>
+    ${itemsHtml}
+  `;
+}
+
+document.getElementById("reset").addEventListener("click", ()=>{
+  selected = null;
+  render();
+});
+
+drawWheel();
+render();
+</script>
+</body>
+</html>
