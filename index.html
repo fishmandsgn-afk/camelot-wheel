@@ -12,9 +12,31 @@
     --muted:#8a8d99;
     --accent:#f2545b;
     --accent2:#4fd1c5;
+    --accent3:#f5a623;
     --outer-fill:#2a2d3a;
     --inner-fill:#232633;
     --stroke:#0e0f13;
+    --bg-grad:#22242e;
+    --chip-bg:#2a2d3a;
+    --border:#3a3d4a;
+    --dim-note:#54576a;
+  }
+  :root[data-theme="light"]{
+    --bg:#f3f4f7;
+    --panel:#ffffff;
+    --text:#1c1e26;
+    --muted:#6c7080;
+    --accent:#e0454b;
+    --accent2:#0ea99a;
+    --accent3:#d98209;
+    --outer-fill:#e6e8ee;
+    --inner-fill:#eef0f5;
+    --stroke:#c7cad4;
+    --bg-grad:#ffffff;
+    --chip-bg:#eef0f5;
+    --border:#d3d6e0;
+    --dim-note:#a7abb8;
+  }
   }
   *{box-sizing:border-box;}
   html, body{
@@ -24,7 +46,7 @@
   body{
     margin:0;
     min-height:100svh;
-    background:radial-gradient(circle at 50% 15%, #22242e, var(--bg) 60%);
+    background:radial-gradient(circle at 50% 15%, var(--bg-grad), var(--bg) 60%);
     color:var(--text);
     font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
     display:flex;
@@ -74,6 +96,7 @@
   .seg:active{filter:brightness(1.3);}
   .seg-group.selected .seg{fill:var(--accent)!important;}
   .seg-group.compatible .seg{fill:var(--accent2)!important;}
+  .seg-group.extreme .seg{fill:var(--accent3)!important;}
   .seg-group.dim{opacity:.3;}
   .label{
     font-size:14px;
@@ -94,11 +117,13 @@
     transition:fill .12s ease;
   }
   .seg-group.dim .label{fill:var(--muted);}
-  .seg-group.dim .label.note{fill:#54576a;}
+  .seg-group.dim .label.note{fill:var(--dim-note);}
   .seg-group.selected .label,
   .seg-group.compatible .label,
+  .seg-group.extreme .label,
   .seg-group.selected .label.note,
-  .seg-group.compatible .label.note{fill:#101116;}
+  .seg-group.compatible .label.note,
+  .seg-group.extreme .label.note{fill:#101116;}
   #legend{
     margin-top:16px;
     display:flex;
@@ -132,17 +157,67 @@
   }
   #info .compat-item{
     display:inline-block;
-    background:#2a2d3a;
+    background:var(--chip-bg);
     border-radius:8px;
     padding:5px 10px;
     margin:3px 4px 0 0;
     font-weight:600;
     font-size:13px;
   }
+  #info .extreme-item{
+    display:inline-block;
+    background:rgba(245,166,35,.15);
+    border:1px solid rgba(245,166,35,.4);
+    border-radius:8px;
+    padding:5px 10px;
+    margin:3px 4px 0 0;
+    font-weight:600;
+    font-size:13px;
+    color:var(--accent3);
+  }
+  #info .section-label{
+    display:block;
+    margin-top:12px;
+    font-size:12px;
+    color:var(--muted);
+  }
+  #extremeToggle{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-top:14px;
+    font-size:13px;
+    color:var(--muted);
+    cursor:pointer;
+    -webkit-tap-highlight-color: transparent;
+    user-select:none;
+  }
+  #extremeToggle .switch{
+    width:38px;
+    height:22px;
+    border-radius:12px;
+    background:var(--chip-bg);
+    border:1px solid var(--border);
+    position:relative;
+    flex-shrink:0;
+    transition:background .15s ease, border-color .15s ease;
+  }
+  #extremeToggle .switch::after{
+    content:"";
+    position:absolute;
+    top:2px; left:2px;
+    width:16px; height:16px;
+    border-radius:50%;
+    background:var(--muted);
+    transition:transform .15s ease, background .15s ease;
+  }
+  #extremeToggle.on{color:var(--text);}
+  #extremeToggle.on .switch{background:rgba(245,166,35,.25); border-color:var(--accent3);}
+  #extremeToggle.on .switch::after{transform:translateX(16px); background:var(--accent3);}
   #reset{
     margin-top:14px;
     background:none;
-    border:1px solid #3a3d4a;
+    border:1px solid var(--border);
     color:var(--muted);
     padding:10px 18px;
     border-radius:10px;
@@ -150,21 +225,73 @@
     cursor:pointer;
     -webkit-tap-highlight-color: transparent;
   }
-  #reset:active{color:var(--text); border-color:var(--muted); background:#22242e;}
+  #reset:active{color:var(--text); border-color:var(--muted); background:var(--chip-bg);}
+  .theme-toggle{
+    position:fixed;
+    left:10px;
+    top:50%;
+    transform:translateY(-50%);
+    width:38px;
+    height:38px;
+    border-radius:50%;
+    background:var(--panel);
+    border:1px solid var(--border);
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    cursor:pointer;
+    z-index:100;
+    -webkit-tap-highlight-color: transparent;
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+    color:var(--accent3);
+  }
+  .theme-toggle .icon{display:none;}
+  .theme-toggle .icon svg{display:block;}
+  .theme-toggle .icon.moon{display:flex;}
+  :root[data-theme="light"] .theme-toggle .icon.moon{display:none;}
+  :root[data-theme="light"] .theme-toggle .icon.sun{display:flex;}
 </style>
 </head>
+
 <body>
+
+<div id="themeToggle" class="theme-toggle" role="button" aria-label="Перемкнути тему">
+  <span class="icon sun">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+      <circle cx="12" cy="12" r="5"/>
+      <line x1="12" y1="1" x2="12" y2="3"/>
+      <line x1="12" y1="21" x2="12" y2="23"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/>
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="1" y1="12" x2="3" y2="12"/>
+      <line x1="21" y1="12" x2="23" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/>
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>
+  </span>
+  <span class="icon moon">
+    <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>
+  </span>
+</div>
 
 <h1>Колесо Камелота</h1>
 <p class="sub">Натисни на свою тональність — підсвітяться ті, з якими вона добре зводиться (гармонічний мікс).</p>
 
 <div id="wrap">
-  <svg viewBox="0 0 500 500" width="500" height="500"></svg>
+  <svg id="wheelSvg" viewBox="0 0 500 500" width="500" height="500"></svg>
 </div>
 
 <div id="legend">
   <span><span class="dot" style="background:var(--accent)"></span>обрана тональність</span>
   <span><span class="dot" style="background:var(--accent2)"></span>сумісні для зведення</span>
+  <span><span class="dot" style="background:var(--accent3)"></span>екстремальні (+2 / +7)</span>
+</div>
+
+<div id="extremeToggle">
+  <span class="switch"></span>
+  Показати екстремальні переходи (+2 / +7)
 </div>
 
 <div id="info">Обери тональність на колесі, щоб побачити варіанти зведення.</div>
@@ -188,7 +315,7 @@ const KEYS = [
 ];
 
 const svgNS = "http://www.w3.org/2000/svg";
-const svg = document.querySelector("svg");
+const svg = document.getElementById("wheelSvg");
 const cx = 250, cy = 250;
 const rOuterOut = 235, rOuterIn = 150, rInnerOut = 148, rInnerIn = 65;
 
@@ -282,6 +409,10 @@ function drawWheel(){
   });
 }
 
+function wrapNum(n){
+  return ((n - 1) % 12 + 12) % 12 + 1;
+}
+
 function getCompatible(num, letter){
   const prev = num===1 ? 12 : num-1;
   const next = num===12 ? 1 : num+1;
@@ -292,6 +423,15 @@ function getCompatible(num, letter){
     {num:num, letter:otherLetter, label:"паралельна тональність"},
   ];
 }
+
+function getExtreme(num, letter){
+  return [
+    {num:wrapNum(num+2), letter, tag:"+2", label:"різкий зсув"},
+    {num:wrapNum(num+7), letter, tag:"+7", label:"енергетичний буст"},
+  ];
+}
+
+let showExtreme = false;
 
 function keyName(num, letter){
   const k = KEYS.find(x=>x.num===num);
@@ -309,7 +449,7 @@ function selectKey(num, letter){
 
 function render(){
   document.querySelectorAll(".seg-group").forEach(el=>{
-    el.classList.remove("selected","compatible","dim");
+    el.classList.remove("selected","compatible","extreme","dim");
   });
 
   const info = document.getElementById("info");
@@ -334,16 +474,55 @@ function render(){
     itemsHtml += `<span class="compat-item">${c.num}${c.letter} — ${keyName(c.num,c.letter)}</span>`;
   });
 
+  let extremeHtml = "";
+  if(showExtreme){
+    const extreme = getExtreme(selected.num, selected.letter);
+    extreme.forEach(e=>{
+      const el = document.getElementById("seg-"+keyId(e.num, e.letter));
+      // не перебиваємо колір, якщо цей сектор вже позначено як звичний сумісний
+      if(!el.classList.contains("compatible") && !el.classList.contains("selected")){
+        el.classList.remove("dim");
+        el.classList.add("extreme");
+      }
+      extremeHtml += `<span class="extreme-item">${e.tag}: ${e.num}${e.letter} — ${keyName(e.num,e.letter)} (${e.label})</span>`;
+    });
+  }
+
   info.innerHTML = `
     <div class="title">${selected.num}${selected.letter} — ${keyName(selected.num, selected.letter)}</div>
     Добре зводиться з:<br>
     ${itemsHtml}
+    ${extremeHtml ? `<span class="section-label">Екстремальні переходи — використовуй для драматичних моментів, звучить різкіше:</span>${extremeHtml}` : ""}
   `;
 }
+
+document.getElementById("extremeToggle").addEventListener("click", (e)=>{
+  showExtreme = !showExtreme;
+  e.currentTarget.classList.toggle("on", showExtreme);
+  render();
+});
 
 document.getElementById("reset").addEventListener("click", ()=>{
   selected = null;
   render();
+});
+
+// Тема (світла/темна), збережена між відкриттями
+function applyTheme(theme){
+  document.documentElement.setAttribute("data-theme", theme === "light" ? "light" : "dark");
+}
+let initialTheme = "dark";
+try{
+  const saved = localStorage.getItem("camelot-theme");
+  if(saved === "light" || saved === "dark") initialTheme = saved;
+} catch(e){}
+applyTheme(initialTheme);
+
+document.getElementById("themeToggle").addEventListener("click", ()=>{
+  const current = document.documentElement.getAttribute("data-theme") === "light" ? "light" : "dark";
+  const next = current === "light" ? "dark" : "light";
+  applyTheme(next);
+  try{ localStorage.setItem("camelot-theme", next); } catch(e){}
 });
 
 drawWheel();
